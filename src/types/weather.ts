@@ -12,9 +12,13 @@ export interface WeatherData {
   };
   hourly: HourlyForecast[];
   forecast: DailyForecast[];
+  monthlyForecast: MonthlyForecastDay[];
   location: {
     name: string;
     country: string;
+    admin1?: string;
+    latitude: number;
+    longitude: number;
   };
 }
 
@@ -37,10 +41,24 @@ export interface DailyForecast {
   sunset: string;
 }
 
+export interface MonthlyForecastDay {
+  date: string;
+  maxTemp: number;
+  minTemp: number;
+  conditionCode: number;
+  precipitationSum: number;
+  windSpeed: number;
+}
+
 export interface GeocodeResult {
   id: number;
   name: string;
   latitude: number;
   longitude: number;
   country: string;
+  admin1?: string;
+  admin2?: string;
+  country_code?: string;
+  population?: number;
 }
+

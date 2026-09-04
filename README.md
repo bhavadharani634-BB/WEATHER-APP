@@ -1,32 +1,58 @@
-# React + TypeScript + Vite
+# AnomaSense - Atmospheric Weather Intelligence
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A state-of-the-art, liquid-forest glassmorphism weather application built with React, TypeScript, and Tailwind CSS. Features 30-day extended ensemble forecasts, live Doppler radar map with scrubbing, and predictive debounced search.
 
-Currently, two official plugins are available:
+## Installation and Local Setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Follow these steps to run the project locally:
 
-## React Compiler
+1. **Clone the repository** (if you haven't already):
+   ```bash
+   git clone <your-repo-url>
+   cd minor
+   ```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-## Expanding the Oxlint configuration
+3. **Start the development server**:
+   ```bash
+   npm run dev
+   ```
+   The application will be available at `http://localhost:5173/` by default.
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+4. **Build for production** (optional):
+   ```bash
+   npm run build
+   ```
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
+## Assumptions and Known Limitations
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+### Assumptions
+* **Browser Support:** The application assumes a modern browser that fully supports CSS custom properties, backdrop filters (for glassmorphism), and flexbox/grid layouts.
+* **API Availability:** The app assumes the open weather API (e.g., Open-Meteo) is available and responsive. It operates without an API key, relying on the free tier limits.
+* **Environment:** No specific `.env` configuration is required to start the app out of the box.
+
+### Known Limitations
+* **Rate Limiting:** Because it relies on a free, unauthenticated API tier, excessive requests from the same IP address may be temporarily blocked by the provider.
+* **Localization:** Currently, weather conditions and text are hardcoded in English and mapped manually from WMO weather codes.
+* **Responsiveness:** The UI is heavily optimized for mobile and compact widget views. On very large desktop screens, the layout might appear wider than necessary unless constrained by a parent container.
+
+## AI Usage Disclosure
+
+Transparency regarding the use of AI tools in the development of this project:
+
+* **AI Tools Used:** Google Gemini (Antigravity IDE integration).
+* **Tasks Assisted With:** 
+  * Bootstrapping the initial Vite + React + Tailwind v4 configuration.
+  * Generating the complex UI layout and glassmorphism styling (`liquid-glass` classes).
+  * Creating the boilerplate WMO weather code mapping logic (`getConditionText`).
+  * Drafting this README documentation.
+* **What I Wrote Myself:** 
+  * The orchestration of components (`CurrentWeather`, `SearchBar`, `ForecastList`).
+  * The state management architecture and data fetching integration.
+  * Adjusting and refining the AI-generated design tokens to fit the specific aesthetic vision of the project.
+* **Independent Technical Decision:** 
+  * **Client-side Weather Code Mapping:** I made the decision to manually map standard WMO weather codes on the client side rather than relying on a heavier third-party weather SDK or an API that returns pre-formatted text. This approach ensures the application remains highly lightweight, reduces external dependency bloat, and provides the flexibility to easily implement custom localization in the future.

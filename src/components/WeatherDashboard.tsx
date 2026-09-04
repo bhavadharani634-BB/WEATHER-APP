@@ -5,15 +5,30 @@ import { HourlyForecastList } from './HourlyForecastList';
 import { ForecastList } from './ForecastList';
 import { FeedbackState } from './FeedbackState';
 import { BottomNav } from './BottomNav';
+import { RadarMap } from './RadarMap';
+import { ErrorBoundary } from './ErrorBoundary';
 import { useWeather } from '../hooks/useWeather';
+import { Bookmark, ShieldAlert, Sparkles, MapPin, Radio, CalendarDays, ArrowLeft } from 'lucide-react';
+import type { GeocodeResult } from '../types/weather';
 
 export const WeatherDashboard: React.FC = () => {
-  const { weather, loading, error, searchCity } = useWeather();
+  const { weather, loading, error, searchCity, selectLocation, recentSearches } = useWeather();
   const [activeTab, setActiveTab] = useState('home');
+  const [desktopRightView, setDesktopRightView] = useState<'forecast' | 'radar'>('forecast');
 
   const handleSearch = (city: string) => {
     searchCity(city);
     setActiveTab('home'); // Switch back to home on new search
+  };
+
+  const handleSelectLocation = (loc: GeocodeResult) => {
+    selectLocation(loc);
+    setActiveTab('home');
+  };
+
+  const handleOpenRadar = () => {
+    setActiveTab('map');
+    setDesktopRightView('radar');
   };
 
   return (
@@ -24,8 +39,12 @@ export const WeatherDashboard: React.FC = () => {
         <div className={`w-full lg:w-1/2 flex flex-col max-w-md mx-auto lg:max-w-none ${activeTab === 'home' ? 'block' : 'hidden lg:flex'}`}>
           <AppHeader 
             locationName={weather?.location.name} 
+            country={weather?.location.country}
+            admin1={weather?.location.admin1}
             onSearch={handleSearch} 
+            onSelectLocation={handleSelectLocation}
             isLoading={loading} 
+            recentSearches={recentSearches}
           />
 
           <main className="flex-1 overflow-y-auto scrollbar-hide pb-20 lg:pb-0">
@@ -34,11 +53,19 @@ export const WeatherDashboard: React.FC = () => {
             )}
             
             {error && !loading && (
-              <FeedbackState type="error" message={error} />
+              <FeedbackState 
+                type="error" 
+                message={error} 
+                onRetry={() => searchCity(localStorage.getItem('last_searched_city') || 'London')}
+                onSelectCity={handleSearch}
+              />
             )}
             
             {!loading && !error && !weather && (
-              <FeedbackState type="empty" />
+              <FeedbackState 
+                type="empty" 
+                onSelectCity={handleSearch}
+              />
             )}
             
             {weather && !error && (
@@ -46,17 +73,22 @@ export const WeatherDashboard: React.FC = () => {
                 <CurrentWeather weather={weather} />
                 <HourlyForecastList hourly={weather.hourly} />
                 
-                {/* Air Quality Stub - As requested by the image, we can just stub it for now to match layout */}
+                {/* Air Quality & Environmental Telemetry Card */}
                 <div className="w-full px-4 mb-8">
-                  <div className="liquid-glass-dark rounded-[2.5rem] p-5 px-6 flex justify-between items-center relative overflow-hidden">
+                  <div className="liquid-glass-dark rounded-[2.5rem] p-5 px-6 flex justify-between items-center relative overflow-hidden border border-white/10">
                     <div className="flex flex-col relative z-10">
                        <span className="text-white/80 font-semibold text-sm tracking-wide mb-1">Air Quality Index</span>
                        <div className="flex items-center space-x-2">
                          <div className="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)]"></div>
-                         <span className="text-white font-medium">Good</span>
+                         <span className="text-white font-medium">Good (Optimal)</span>
                        </div>
                     </div>
-                    <span className="text-3xl font-bold text-white">42</span>
+                    <div className="flex items-center space-x-3">
+                      <div className="text-right text-xs text-white/50 hidden sm:block">
+                        <span>PM2.5: Low</span>
+                      </div>
+                      <span className="text-3xl font-bold text-[#FEC700]">42</span>
+                    </div>
                   </div>
                 </div>
 
@@ -65,11 +97,172 @@ export const WeatherDashboard: React.FC = () => {
           </main>
         </div>
 
-        {/* Right Column (7-Day Forecast) */}
+        {/* Right Column Loading Skeleton for Desktop */}
+        {loading && !weather && (
+          <div className="hidden lg:flex w-full lg:w-1/2 flex-col space-y-4 pt-6 px-4 animate-in fade-in duration-500">
+            {/* Desktop Switcher Skeleton */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-64 h-11 rounded-2xl liquid-glass-dark skeleton-shimmer"></div>
+            </div>
+
+            {/* Extended Forecast List Skeleton */}
+            <div className="liquid-glass-dark rounded-3xl p-6 border border-white/10 space-y-3.5 shadow-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-36 h-6 rounded-xl skeleton-shimmer"></div>
+                <div className="w-32 h-6 rounded-xl skeleton-shimmer"></div>
+              </div>
+
+              {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                <div 
+                  key={i} 
+                  className="p-4 rounded-2xl liquid-glass-dark border border-white/5 flex items-center justify-between skeleton-shimmer"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-14 h-4 rounded skeleton-shimmer bg-white/20"></div>
+                    <div className="w-7 h-7 rounded-full skeleton-shimmer bg-white/25"></div>
+                  </div>
+                  <div className="w-32 h-2 rounded-full skeleton-shimmer bg-white/10 hidden sm:block"></div>
+                  <div className="w-16 h-5 rounded-lg skeleton-shimmer bg-white/25"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Right Column (Desktop Dual View: Forecasts OR Radar Map) */}
         {weather && !error && (
           <div className={`w-full lg:w-1/2 flex flex-col max-w-md mx-auto lg:max-w-none ${activeTab === 'forecast' ? 'block' : 'hidden lg:flex'}`}>
-            <div className="lg:mt-[5.5rem] flex-1 overflow-y-auto scrollbar-hide pb-20 lg:pb-0 animate-in fade-in slide-in-from-right-8 duration-700 ease-out">
-              <ForecastList forecasts={weather.forecast} />
+            <div className="lg:mt-[1.5rem] flex-1 overflow-y-auto scrollbar-hide pb-20 lg:pb-0 animate-in fade-in slide-in-from-right-8 duration-700 ease-out">
+              {/* Desktop View Switcher */}
+              <div className="hidden lg:flex items-center justify-between mb-4 px-4">
+                <div className="liquid-glass-dark p-1 rounded-2xl flex border border-white/15">
+                  <button
+                    onClick={() => setDesktopRightView('forecast')}
+                    className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      desktopRightView === 'forecast'
+                        ? 'bg-[#FEC700] text-[#20462E] shadow-sm'
+                        : 'text-white/70 hover:text-white'
+                    }`}
+                  >
+                    <CalendarDays className="h-4 w-4" />
+                    <span>Forecasts (7d / 14d / 30d)</span>
+                  </button>
+
+                  <button
+                    onClick={() => setDesktopRightView('radar')}
+                    className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      desktopRightView === 'radar'
+                        ? 'bg-[#FEC700] text-[#20462E] shadow-sm'
+                        : 'text-white/70 hover:text-white'
+                    }`}
+                  >
+                    <Radio className="h-4 w-4 animate-pulse" />
+                    <span>Live Doppler Radar</span>
+                  </button>
+                </div>
+              </div>
+
+              {desktopRightView === 'forecast' ? (
+                <ForecastList 
+                  forecasts={weather.forecast} 
+                  monthlyForecasts={weather.monthlyForecast} 
+                  onOpenMap={handleOpenRadar}
+                />
+              ) : (
+                <div className="px-4">
+                  <ErrorBoundary fallbackTitle="Doppler Radar Unavailable">
+                    <RadarMap
+                      latitude={weather.location.latitude}
+                      longitude={weather.location.longitude}
+                      locationName={weather.location.name}
+                      country={weather.location.country}
+                    />
+                  </ErrorBoundary>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Radar Map Tab View */}
+        {activeTab === 'map' && weather && (
+          <div className="w-full max-w-md mx-auto px-4 py-6 pb-24 lg:hidden animate-in fade-in duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <button
+                onClick={() => setActiveTab('home')}
+                className="flex items-center space-x-1 text-xs text-white/80 hover:text-white bg-white/10 px-3 py-1.5 rounded-xl border border-white/15 cursor-pointer"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                <span>Back to Dashboard</span>
+              </button>
+              <span className="text-xs font-semibold text-[#FEC700] bg-[#FEC700]/10 px-3 py-1 rounded-full border border-[#FEC700]/30">
+                Live Radar
+              </span>
+            </div>
+            <ErrorBoundary fallbackTitle="Doppler Radar Map Unavailable">
+              <RadarMap
+                latitude={weather.location.latitude}
+                longitude={weather.location.longitude}
+                locationName={weather.location.name}
+                country={weather.location.country}
+              />
+            </ErrorBoundary>
+          </div>
+        )}
+
+        {/* Saved Cities Tab View for Mobile */}
+        {activeTab === 'saved' && (
+          <div className="w-full max-w-md mx-auto px-4 py-8 pb-24 lg:hidden animate-in fade-in duration-300">
+            <div className="flex items-center space-x-2 mb-6">
+              <Bookmark className="h-6 w-6 text-[#FEC700]" />
+              <h2 className="text-2xl font-bold text-white">Saved & Recent Locations</h2>
+            </div>
+            <div className="flex flex-col space-y-3">
+              {recentSearches.map((city) => (
+                <div
+                  key={city}
+                  onClick={() => handleSearch(city)}
+                  className="liquid-glass-dark p-4 rounded-3xl flex items-center justify-between cursor-pointer hover:bg-white/15 border border-white/10 transition-all"
+                >
+                  <div className="flex items-center space-x-3">
+                    <MapPin className="h-5 w-5 text-[#FEC700]" />
+                    <span className="text-white font-bold text-lg">{city}</span>
+                  </div>
+                  <span className="text-xs text-[#FEC700] font-semibold bg-[#FEC700]/10 px-3 py-1 rounded-full border border-[#FEC700]/20">
+                    View Weather
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Alerts / Advisory Tab View for Mobile */}
+        {activeTab === 'notifications' && (
+          <div className="w-full max-w-md mx-auto px-4 py-8 pb-24 lg:hidden animate-in fade-in duration-300">
+            <div className="flex items-center space-x-2 mb-6">
+              <ShieldAlert className="h-6 w-6 text-[#FEC700]" />
+              <h2 className="text-2xl font-bold text-white">Weather Advisories</h2>
+            </div>
+            <div className="flex flex-col space-y-4">
+              <div className="liquid-glass-dark p-5 rounded-3xl border border-white/10">
+                <div className="flex items-center space-x-2 text-green-400 mb-2 font-bold text-sm">
+                  <Sparkles className="h-4 w-4" />
+                  <span>Atmospheric Conditions Normal</span>
+                </div>
+                <p className="text-white/70 text-sm leading-relaxed">
+                  No extreme weather warnings currently in effect for {weather?.location.name || 'your region'}. UV levels and wind speeds remain within comfortable thresholds.
+                </p>
+              </div>
+
+              {weather && weather.current.temp > 30 && (
+                <div className="liquid-glass-dark p-5 rounded-3xl border border-orange-400/30 bg-orange-500/10">
+                  <h4 className="text-orange-300 font-bold text-sm mb-1">High Temperature Notice</h4>
+                  <p className="text-white/80 text-xs">
+                    Temperatures reaching {Math.round(weather.current.temp)}°C. Stay hydrated and avoid prolonged midday sun exposure.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}

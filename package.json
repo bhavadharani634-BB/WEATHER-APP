@@ -1,6 +1,7 @@
 {
-  "name": "minor",
+  "name": "anomasense",
   "private": true,
+  "homepage": "https://bhavadharani634-bb.github.io/WEATHER-APP/",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
@@ -12,9 +13,11 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "@types/leaflet": "^1.9.22",
     "axios": "^1.18.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
+    "leaflet": "^1.9.4",
     "lucide-react": "^1.24.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",

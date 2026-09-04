@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import type { WeatherData } from '../types/weather';
 import { WeatherIcon } from './WeatherIcon';
+import { format } from 'date-fns';
+import { Calendar, Clock } from 'lucide-react';
 
 interface CurrentWeatherProps {
   weather: WeatherData;
@@ -20,14 +22,43 @@ const getConditionText = (code: number): string => {
 export const CurrentWeather: React.FC<CurrentWeatherProps> = ({ weather }) => {
   const { current } = weather;
   const conditionText = getConditionText(current.conditionCode);
+  const [currentDate, setCurrentDate] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentDate(new Date()), 30000);
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <div className="w-full relative px-4 mb-8">
       {/* Background glow for the card */}
       <div className="absolute inset-4 bg-gradient-to-br from-[#FEC700]/30 to-transparent blur-2xl rounded-[3rem] z-0"></div>
       
-      <div className="liquid-glass liquid-glass-highlight flex flex-col items-center p-8 rounded-[3rem] overflow-hidden">
+      <div className="liquid-glass liquid-glass-highlight flex flex-col p-7 rounded-[3rem] overflow-hidden">
         
+        {/* Date, Month, Year & Time Header */}
+        <div className="w-full flex items-center justify-between pb-4 mb-3 border-b border-white/10 z-10 relative">
+          <div className="flex items-center space-x-2">
+            <div className="p-1.5 rounded-xl bg-white/10 text-[#FEC700]">
+              <Calendar className="h-4 w-4" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-white font-bold text-sm tracking-wide">
+                {format(currentDate, 'EEEE')}
+              </span>
+              <span className="text-[#FEC700] text-xs font-semibold">
+                {format(currentDate, 'MMMM d, yyyy')}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-[11px] font-medium text-white/90">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+            <Clock className="h-3 w-3 text-white/70" />
+            <span>{format(currentDate, 'h:mm a')}</span>
+          </div>
+        </div>
+
         <div className="flex justify-between w-full items-center mb-2 z-10 relative">
            <WeatherIcon 
             code={current.conditionCode} 

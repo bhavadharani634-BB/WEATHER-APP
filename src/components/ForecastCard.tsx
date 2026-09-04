@@ -15,6 +15,7 @@ interface ForecastCardProps {
 export const ForecastCard: React.FC<ForecastCardProps> = ({ forecast, isExpanded, onToggle }) => {
   const dateObj = parseISO(forecast.date);
   const dayName = isToday(dateObj) ? 'Today' : format(dateObj, 'EEE');
+  const dateSub = format(dateObj, 'MMM d, yyyy');
   
   return (
     <div 
@@ -29,7 +30,10 @@ export const ForecastCard: React.FC<ForecastCardProps> = ({ forecast, isExpanded
         className="flex items-center justify-between p-4 cursor-pointer"
         onClick={onToggle}
       >
-        <span className="text-white font-medium w-16">{dayName}</span>
+        <div className="flex flex-col w-24">
+          <span className="text-white font-semibold text-sm">{dayName}</span>
+          <span className="text-white/50 text-[10px]">{dateSub}</span>
+        </div>
         <div className="flex-1 flex justify-center">
           <WeatherIcon code={forecast.conditionCode} className="h-6 w-6 text-[#FEC700]" />
         </div>
