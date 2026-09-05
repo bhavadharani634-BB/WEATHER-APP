@@ -62,7 +62,6 @@ export const fetchWeatherByCoords = async (
         daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,uv_index_max,sunrise,sunset',
         timezone: 'auto',
         forecast_days: 14,
-        forecast_hours: 24,
       },
     }),
     axios.get(ENSEMBLE_API_URL, {
@@ -101,9 +100,10 @@ export const fetchWeatherByCoords = async (
     }
   }
 
-  // Process hourly forecast (24 hours)
+  // Process hourly forecast (all available hours)
   const hourly: HourlyForecast[] = [];
-  for (let i = 0; i < 24; i++) {
+  const hourlyCount = data.hourly?.time?.length || 0;
+  for (let i = 0; i < hourlyCount; i++) {
     if (data.hourly?.time?.[i]) {
       hourly.push({
         time: data.hourly.time[i],
@@ -157,8 +157,8 @@ export const fetchWeatherByCoords = async (
       windSpeed: data.current.wind_speed_10m,
       conditionCode: data.current.weather_code,
       isDay: data.current.is_day,
-      high: data.daily.temperature_2m_max[0],
-      low: data.daily.temperature_2m_min[0],
+      high: data.daily?.temperature_2m_max?.[0] ?? data.current.temperature_2m,
+      low: data.daily?.temperature_2m_min?.[0] ?? data.current.temperature_2m,
     },
     hourly,
     forecast,

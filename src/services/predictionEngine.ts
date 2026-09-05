@@ -262,10 +262,16 @@ export function predictWeatherForDate(weather: WeatherData, targetDateStr: strin
 
   let targetDate: Date;
   try {
-    targetDate = parseISO(targetDateStr);
+    const parsed = parseISO(targetDateStr);
+    if (isNaN(parsed.getTime())) {
+      targetDate = addDays(today, 7);
+    } else {
+      targetDate = parsed;
+    }
     targetDate.setHours(0, 0, 0, 0);
   } catch {
     targetDate = addDays(today, 7);
+    targetDate.setHours(0, 0, 0, 0);
   }
 
   const daysAhead = Math.max(0, differenceInDays(targetDate, today));

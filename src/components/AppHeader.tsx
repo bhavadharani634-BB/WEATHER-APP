@@ -3,7 +3,7 @@ import { MapPin, Search, ChevronDown, X, History, Loader2, Globe, Sun, Cloud } f
 import { searchCities } from '../services/weatherApi';
 import type { GeocodeResult } from '../types/weather';
 import { format } from 'date-fns';
-import { cn } from './SearchBar';
+import { cn } from '../utils/cn';
 
 interface AppHeaderProps {
   locationName?: string;

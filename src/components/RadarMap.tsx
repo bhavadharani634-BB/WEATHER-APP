@@ -186,6 +186,7 @@ export const RadarMap: React.FC<RadarMapProps> = ({ latitude, longitude, locatio
       }
       mapInstanceRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update base layer if basemapStyle, mapboxKey, or provider changes

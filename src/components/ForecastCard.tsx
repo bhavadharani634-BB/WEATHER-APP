@@ -12,10 +12,28 @@ interface ForecastCardProps {
   onToggle: () => void;
 }
 
+const formatTimeSafe = (timeStr?: string): string => {
+  if (!timeStr) return 'N/A';
+  try {
+    const d = parseISO(timeStr);
+    return isNaN(d.getTime()) ? 'N/A' : format(d, 'h:mm a');
+  } catch {
+    return 'N/A';
+  }
+};
+
 export const ForecastCard: React.FC<ForecastCardProps> = ({ forecast, isExpanded, onToggle }) => {
-  const dateObj = parseISO(forecast.date);
-  const dayName = isToday(dateObj) ? 'Today' : format(dateObj, 'EEE');
-  const dateSub = format(dateObj, 'MMM d, yyyy');
+  let dayName = 'Forecast';
+  let dateSub = '';
+  try {
+    const dateObj = parseISO(forecast.date);
+    if (!isNaN(dateObj.getTime())) {
+      dayName = isToday(dateObj) ? 'Today' : format(dateObj, 'EEE');
+      dateSub = format(dateObj, 'MMM d, yyyy');
+    }
+  } catch {
+    dayName = forecast.date || 'Forecast';
+  }
   
   return (
     <div 
@@ -66,7 +84,7 @@ export const ForecastCard: React.FC<ForecastCardProps> = ({ forecast, isExpanded
         </div>
         <div className="flex items-center space-x-2 text-sm text-white/80">
           <Sunrise className="h-4 w-4 text-[#FEC700]" />
-          <span>{format(parseISO(forecast.sunrise), 'h:mm a')}</span>
+          <span>{formatTimeSafe(forecast.sunrise)}</span>
         </div>
       </div>
     </div>

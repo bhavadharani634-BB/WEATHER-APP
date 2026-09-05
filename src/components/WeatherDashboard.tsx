@@ -156,8 +156,19 @@ export const WeatherDashboard: React.FC = () => {
 
         {/* Right Column (Desktop Triple View: Forecasts, Radar Map, OR AI Predictor) */}
         {weather && !error && (
-          <div className={`w-full lg:w-1/2 flex flex-col max-w-md mx-auto lg:max-w-none ${activeTab === 'forecast' || activeTab === 'predict' ? 'block' : 'hidden lg:flex'}`}>
+          <div className={`w-full lg:w-1/2 flex flex-col max-w-md mx-auto lg:max-w-none ${activeTab === 'forecast' ? 'block' : 'hidden lg:flex'}`}>
             <div className="lg:mt-[1.5rem] flex-1 overflow-y-auto scrollbar-hide pb-20 lg:pb-0 animate-in fade-in slide-in-from-right-8 duration-700 ease-out">
+              {/* Mobile Back Button for Forecast Tab */}
+              <div className="flex items-center justify-between mb-4 px-4 lg:hidden">
+                <button
+                  onClick={() => setActiveTab('home')}
+                  className="flex items-center space-x-1 text-xs text-white/80 hover:text-white bg-white/10 px-3 py-1.5 rounded-xl border border-white/15 cursor-pointer"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  <span>Back to Dashboard</span>
+                </button>
+              </div>
+
               {/* Desktop View Switcher */}
               <div className="hidden lg:flex items-center justify-between mb-4 px-4">
                 <div className="liquid-glass-dark p-1 rounded-2xl flex border border-white/15 gap-1">

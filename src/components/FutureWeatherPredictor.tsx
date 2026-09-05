@@ -18,7 +18,7 @@ import {
   Snowflake,
   CloudLightning
 } from 'lucide-react';
-import { format, addDays } from 'date-fns';
+import { format, addDays, parseISO } from 'date-fns';
 
 interface FutureWeatherPredictorProps {
   weather: WeatherData;
@@ -325,7 +325,16 @@ export const FutureWeatherPredictor: React.FC<FutureWeatherPredictorProps> = ({ 
                     : `In ${selectedPrediction.daysAhead} Days`}
                 </span>
                 <span className="text-xs text-white/60">
-                  {format(addDays(new Date(), selectedPrediction.daysAhead), 'EEEE, MMMM d, yyyy')}
+                  {(() => {
+                    try {
+                      const d = parseISO(selectedPrediction.targetDate);
+                      return isNaN(d.getTime()) 
+                        ? format(addDays(new Date(), selectedPrediction.daysAhead), 'EEEE, MMMM d, yyyy')
+                        : format(d, 'EEEE, MMMM d, yyyy');
+                    } catch {
+                      return selectedPrediction.targetDate;
+                    }
+                  })()}
                 </span>
               </div>
               <h3 className="text-2xl font-black text-white">

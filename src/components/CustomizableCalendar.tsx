@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import type { DailyForecast, MonthlyForecastDay, HourlyForecast } from '../types/weather';
 import { WeatherIcon } from './WeatherIcon';
 import { 
@@ -19,6 +19,8 @@ import {
   Calendar as CalendarIcon, 
   ChevronLeft, 
   ChevronRight, 
+  ChevronDown,
+  ChevronUp,
   Clock, 
   Sun, 
   Moon, 
@@ -69,6 +71,53 @@ export const CustomizableCalendar: React.FC<CustomizableCalendarProps> = ({
     return eachDayOfInterval({ start: startDate, end: endDate });
   }, [currentMonth]);
 
+  // Show More / Show Less state (defaults to Show Less, persists in localStorage)
+  const [isExpanded, setIsExpanded] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('calendar_show_more');
+      return saved !== null ? saved === 'true' : false;
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleExpanded = useCallback((val?: boolean) => {
+    setIsExpanded((prev) => {
+      const next = typeof val === 'boolean' ? val : !prev;
+      try {
+        localStorage.setItem('calendar_show_more', String(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  }, []);
+
+  // Split calendarDays into weeks of 7 days each
+  const weeks = useMemo(() => {
+    const rows: Date[][] = [];
+    for (let i = 0; i < calendarDays.length; i += 7) {
+      rows.push(calendarDays.slice(i, i + 7));
+    }
+    return rows;
+  }, [calendarDays]);
+
+  // Find week containing selected date
+  const selectedWeekIndex = useMemo(() => {
+    const idx = weeks.findIndex((week) =>
+      week.some((day) => isSameDay(day, selectedDate))
+    );
+    return idx >= 0 ? idx : 0;
+  }, [weeks, selectedDate]);
+
+  // Displayed days depending on Show More (full month) vs Show Less (2 weeks)
+  const displayedDays = useMemo(() => {
+    if (isExpanded) return calendarDays;
+    // Show 2 weeks containing the active selection
+    const startWeek = Math.min(Math.max(0, selectedWeekIndex), Math.max(0, weeks.length - 2));
+    return weeks.slice(startWeek, startWeek + 2).flat();
+  }, [isExpanded, calendarDays, weeks, selectedWeekIndex]);
+
   // Quick baseline temp for synthesized custom days
   const baselineStats = useMemo(() => {
     if (forecasts.length === 0) return { max: 24, min: 14, condition: 1 };
@@ -78,7 +127,7 @@ export const CustomizableCalendar: React.FC<CustomizableCalendarProps> = ({
   }, [forecasts]);
 
   // Helper to get daily weather data for any date
-  const getDayWeatherData = (date: Date) => {
+  const getDayWeatherData = useCallback((date: Date) => {
     const key = format(date, 'yyyy-MM-dd');
     if (dailyMap.has(key)) {
       const d = dailyMap.get(key)!;
@@ -114,16 +163,15 @@ export const CustomizableCalendar: React.FC<CustomizableCalendarProps> = ({
       windSpeed: 14,
       isForecast: false,
     };
-  };
+  }, [dailyMap, monthlyMap, baselineStats]);
 
   // Compute exact weather at the chosen date AND hour
   const selectedDayData = useMemo(() => {
     return getDayWeatherData(selectedDate);
-  }, [selectedDate, dailyMap, monthlyMap, baselineStats]);
+  }, [getDayWeatherData, selectedDate]);
 
   // Compute hourly weather metrics for chosen hour
   const timeWeather = useMemo(() => {
-    const isDayTime = selectedHour >= 6 && selectedHour < 19;
     const { maxTemp, minTemp, conditionCode, precipProb, windSpeed } = selectedDayData;
 
     // Diurnal sinusoidal model: Peak temp at 15:00 (3 PM), minimum at 05:00 (dawn)
@@ -131,11 +179,21 @@ export const CustomizableCalendar: React.FC<CustomizableCalendarProps> = ({
     const midTemp = (maxTemp + minTemp) / 2;
     const tempAmplitude = (maxTemp - minTemp) / 2;
     const diurnalFactor = Math.sin(((selectedHour - 9) * Math.PI) / 12);
-    
-    // Check if live hourly reading matches
-    const matchingLiveHour = isToday(selectedDate) && hourly && hourly.length > 0
-      ? hourly.find((h) => new Date(h.time).getHours() === selectedHour)
+
+    // Check if live hourly forecast matches date and hour
+    const matchingLiveHour = hourly && hourly.length > 0
+      ? hourly.find((h) => {
+          try {
+            const d = parseISO(h.time);
+            return !isNaN(d.getTime()) && isSameDay(d, selectedDate) && d.getHours() === selectedHour;
+          } catch {
+            return false;
+          }
+        })
       : null;
+
+    const isDayTime = matchingLiveHour ? matchingLiveHour.isDay === 1 : (selectedHour >= 6 && selectedHour < 19);
+    const effectiveConditionCode = matchingLiveHour ? matchingLiveHour.conditionCode : conditionCode;
 
     const hourTemp = matchingLiveHour 
       ? Math.round(matchingLiveHour.temp * 10) / 10
@@ -152,13 +210,13 @@ export const CustomizableCalendar: React.FC<CustomizableCalendarProps> = ({
 
     // Condition text
     let conditionText = 'Clear';
-    if (conditionCode === 0) conditionText = isDayTime ? 'Sunny & Clear' : 'Clear Night';
-    else if ([1, 2, 3].includes(conditionCode)) conditionText = isDayTime ? 'Partly Cloudy' : 'Scattered Clouds';
-    else if ([45, 48].includes(conditionCode)) conditionText = 'Foggy Mist';
-    else if ([51, 53, 55].includes(conditionCode)) conditionText = 'Light Drizzle';
-    else if ([61, 63, 65, 80, 81, 82].includes(conditionCode)) conditionText = 'Rain Showers';
-    else if ([71, 73, 75, 85].includes(conditionCode)) conditionText = 'Snow Flurries';
-    else if ([95, 96, 99].includes(conditionCode)) conditionText = 'Thunderstorm';
+    if (effectiveConditionCode === 0) conditionText = isDayTime ? 'Sunny & Clear' : 'Clear Night';
+    else if ([1, 2, 3].includes(effectiveConditionCode)) conditionText = isDayTime ? 'Partly Cloudy' : 'Scattered Clouds';
+    else if ([45, 48].includes(effectiveConditionCode)) conditionText = 'Foggy Mist';
+    else if ([51, 53, 55].includes(effectiveConditionCode)) conditionText = 'Light Drizzle';
+    else if ([61, 63, 65, 80, 81, 82].includes(effectiveConditionCode)) conditionText = 'Rain Showers';
+    else if ([71, 73, 75, 85].includes(effectiveConditionCode)) conditionText = 'Snow Flurries';
+    else if ([95, 96, 99].includes(effectiveConditionCode)) conditionText = 'Thunderstorm';
 
     return {
       hourTemp,
@@ -168,9 +226,9 @@ export const CustomizableCalendar: React.FC<CustomizableCalendarProps> = ({
       hourWind,
       conditionText,
       precipProb,
-      conditionCode,
+      conditionCode: effectiveConditionCode,
     };
-  }, [selectedDayData, selectedHour]);
+  }, [selectedDayData, selectedHour, selectedDate, hourly]);
 
   // Hourly strip for the selected day (every 3 hours)
   const dayTimelineHours = [0, 3, 6, 9, 12, 15, 18, 21];
@@ -186,9 +244,15 @@ export const CustomizableCalendar: React.FC<CustomizableCalendarProps> = ({
 
   const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.value) {
-      const parsed = parseISO(e.target.value);
-      setSelectedDate(parsed);
-      setCurrentMonth(parsed);
+      try {
+        const parsed = parseISO(e.target.value);
+        if (!isNaN(parsed.getTime())) {
+          setSelectedDate(parsed);
+          setCurrentMonth(parsed);
+        }
+      } catch {
+        // ignore invalid date inputs
+      }
     }
   };
 
@@ -439,30 +503,77 @@ export const CustomizableCalendar: React.FC<CustomizableCalendarProps> = ({
       {/* Interactive Month Calendar Matrix */}
       <div className="liquid-glass-dark rounded-3xl p-5 sm:p-6 border border-white/10 shadow-2xl">
         
-        {/* Month Navigation Toolbar */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-2">
-            <CalendarIcon className="h-5 w-5 text-[#FEC700]" />
-            <h4 className="text-lg font-black text-white tracking-wide">
-              {format(currentMonth, 'MMMM yyyy')}
-            </h4>
+        {/* Month Navigation Toolbar & Show More/Less Control */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div className="flex items-center justify-between w-full sm:w-auto">
+            <div className="flex items-center space-x-2">
+              <CalendarIcon className="h-5 w-5 text-[#FEC700]" />
+              <h4 className="text-lg font-black text-white tracking-wide">
+                {format(currentMonth, 'MMMM yyyy')}
+              </h4>
+            </div>
+
+            {/* Mobile Prev/Next buttons */}
+            <div className="flex sm:hidden items-center space-x-1.5">
+              <button
+                onClick={handlePrevMonth}
+                className="p-1.5 rounded-xl bg-white/5 hover:bg-white/15 text-white/80 hover:text-white border border-white/10 transition-colors cursor-pointer"
+                title="Previous Month"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                onClick={handleNextMonth}
+                className="p-1.5 rounded-xl bg-white/5 hover:bg-white/15 text-white/80 hover:text-white border border-white/10 transition-colors cursor-pointer"
+                title="Next Month"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={handlePrevMonth}
-              className="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-white/80 hover:text-white border border-white/10 transition-colors cursor-pointer"
-              title="Previous Month"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              onClick={handleNextMonth}
-              className="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-white/80 hover:text-white border border-white/10 transition-colors cursor-pointer"
-              title="Next Month"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
+          <div className="flex items-center space-x-2.5 self-end sm:self-auto">
+            {/* Show Less / Show More Segmented Pill Control */}
+            <div className="liquid-glass p-0.5 rounded-xl flex border border-white/10 text-xs font-semibold">
+              <button
+                onClick={() => toggleExpanded(false)}
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                  !isExpanded 
+                    ? 'bg-[#FEC700] text-[#20462E] font-bold shadow-sm' 
+                    : 'text-white/70 hover:text-white'
+                }`}
+              >
+                Show Less
+              </button>
+              <button
+                onClick={() => toggleExpanded(true)}
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                  isExpanded 
+                    ? 'bg-[#FEC700] text-[#20462E] font-bold shadow-sm' 
+                    : 'text-white/70 hover:text-white'
+                }`}
+              >
+                Show More
+              </button>
+            </div>
+
+            {/* Desktop Prev/Next buttons */}
+            <div className="hidden sm:flex items-center space-x-1.5">
+              <button
+                onClick={handlePrevMonth}
+                className="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-white/80 hover:text-white border border-white/10 transition-colors cursor-pointer"
+                title="Previous Month"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                onClick={handleNextMonth}
+                className="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-white/80 hover:text-white border border-white/10 transition-colors cursor-pointer"
+                title="Next Month"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -476,8 +587,8 @@ export const CustomizableCalendar: React.FC<CustomizableCalendarProps> = ({
         </div>
 
         {/* Calendar Day Cells */}
-        <div className="grid grid-cols-7 gap-1 sm:gap-2">
-          {calendarDays.map((day) => {
+        <div className="grid grid-cols-7 gap-1 sm:gap-2 transition-all duration-300">
+          {displayedDays.map((day) => {
             const isCurrentMonth = isSameMonth(day, currentMonth);
             const isSelected = isSameDay(day, selectedDate);
             const isTodayDay = isToday(day);
@@ -528,9 +639,28 @@ export const CustomizableCalendar: React.FC<CustomizableCalendarProps> = ({
           })}
         </div>
 
-        <p className="text-[11px] text-white/50 text-center mt-4">
-          💡 Click any day in the calendar to check and scrub that date's exact hourly weather conditions.
-        </p>
+        {/* Show More / Show Less Toggle Button & Guidance Footer */}
+        <div className="mt-4 pt-3 border-t border-white/10 flex flex-col items-center">
+          <button
+            onClick={() => toggleExpanded()}
+            className="flex items-center space-x-2 px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/15 hover:border-[#FEC700]/50 transition-all cursor-pointer shadow-lg group active:scale-95"
+          >
+            <span>
+              {isExpanded 
+                ? 'Show Less (2-Week View)' 
+                : `Show More (${calendarDays.length} Days / Full Month)`}
+            </span>
+            {isExpanded ? (
+              <ChevronUp className="h-4 w-4 text-[#FEC700] group-hover:-translate-y-0.5 transition-transform" />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-[#FEC700] group-hover:translate-y-0.5 transition-transform" />
+            )}
+          </button>
+          
+          <p className="text-[11px] text-white/50 text-center mt-2.5">
+            💡 Click any day in the calendar to check and scrub that date's exact hourly weather conditions.
+          </p>
+        </div>
       </div>
 
     </div>
