@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, CalendarDays, Map, Bookmark, Bell } from 'lucide-react';
+import { Home, CalendarDays, Map, Bookmark, Bell, Sparkles } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -12,6 +12,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, setActiveTab })
   const tabs = [
     { id: 'home', icon: Home, label: 'Home' },
     { id: 'forecast', icon: CalendarDays, label: 'Forecast' },
+    { id: 'predict', icon: Sparkles, label: 'Predict' },
     { id: 'map', icon: Map, label: 'Radar' },
     { id: 'saved', icon: Bookmark, label: 'Saved' },
     { id: 'notifications', icon: Bell, label: 'Alerts' },

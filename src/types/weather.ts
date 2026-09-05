@@ -62,3 +62,40 @@ export interface GeocodeResult {
   population?: number;
 }
 
+export interface PredictedWeatherPoint {
+  date: string;
+  dayName: string;
+  daysAhead: number;
+  expectedTemp: number;
+  maxTemp: number;
+  minTemp: number;
+  upperBound: number;
+  lowerBound: number;
+  conditionCode: number;
+  precipitationProbability: number;
+  precipitationSum: number;
+  windSpeed: number;
+  humidity: number;
+  confidenceScore: number;
+  anomalyType: 'normal' | 'heatwave' | 'cold_front' | 'heavy_rain' | 'high_wind';
+  anomalySeverity: 'none' | 'low' | 'moderate' | 'high';
+}
+
+export interface ActivityFeasibility {
+  id: string;
+  title: string;
+  icon: string;
+  score: number;
+  rating: 'optimal' | 'good' | 'caution' | 'poor';
+  recommendation: string;
+}
+
+export interface FutureDatePrediction {
+  targetDate: string;
+  daysAhead: number;
+  point: PredictedWeatherPoint;
+  activities: ActivityFeasibility[];
+  narrativeSummary: string;
+  confidenceRating: 'Very High' | 'High' | 'Moderate' | 'Fair';
+}
+

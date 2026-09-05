@@ -6,15 +6,16 @@ import { ForecastList } from './ForecastList';
 import { FeedbackState } from './FeedbackState';
 import { BottomNav } from './BottomNav';
 import { RadarMap } from './RadarMap';
+import { FutureWeatherPredictor } from './FutureWeatherPredictor';
 import { ErrorBoundary } from './ErrorBoundary';
 import { useWeather } from '../hooks/useWeather';
-import { Bookmark, ShieldAlert, Sparkles, MapPin, Radio, CalendarDays, ArrowLeft } from 'lucide-react';
+import { Bookmark, ShieldAlert, Sparkles, MapPin, Radio, CalendarDays, ArrowLeft, ChevronRight } from 'lucide-react';
 import type { GeocodeResult } from '../types/weather';
 
 export const WeatherDashboard: React.FC = () => {
   const { weather, loading, error, searchCity, selectLocation, recentSearches } = useWeather();
   const [activeTab, setActiveTab] = useState('home');
-  const [desktopRightView, setDesktopRightView] = useState<'forecast' | 'radar'>('forecast');
+  const [desktopRightView, setDesktopRightView] = useState<'forecast' | 'radar' | 'predict'>('forecast');
 
   const handleSearch = (city: string) => {
     searchCity(city);
@@ -92,6 +93,30 @@ export const WeatherDashboard: React.FC = () => {
                   </div>
                 </div>
 
+                {/* AI Future Weather Predictor Quick-Launch Card */}
+                <div className="w-full px-4 mb-8">
+                  <div 
+                    onClick={() => {
+                      setActiveTab('predict');
+                      setDesktopRightView('predict');
+                    }}
+                    className="liquid-glass-dark rounded-[2.5rem] p-5 px-6 flex justify-between items-center relative overflow-hidden border border-[#FEC700]/30 hover:border-[#FEC700]/60 transition-all cursor-pointer group shadow-lg"
+                  >
+                    <div className="absolute -right-6 -bottom-6 w-28 h-28 bg-[#FEC700]/15 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500"></div>
+                    <div className="flex flex-col relative z-10">
+                      <div className="flex items-center space-x-1.5 text-[#FEC700] mb-1">
+                        <Sparkles className="h-3.5 w-3.5 animate-pulse" />
+                        <span className="text-xs font-bold uppercase tracking-wider">Predictive Telemetry</span>
+                      </div>
+                      <span className="text-white font-bold text-base">AI Future Weather Predictor</span>
+                      <span className="text-white/60 text-xs mt-0.5">Forecast any upcoming date with multi-model AI modeling</span>
+                    </div>
+                    <div className="w-10 h-10 rounded-2xl bg-[#FEC700] text-[#20462E] flex items-center justify-center shrink-0 shadow-md group-hover:scale-110 transition-transform">
+                      <ChevronRight className="h-5 w-5 stroke-[2.5]" />
+                    </div>
+                  </div>
+                </div>
+
               </div>
             )}
           </main>
@@ -129,35 +154,47 @@ export const WeatherDashboard: React.FC = () => {
           </div>
         )}
 
-        {/* Right Column (Desktop Dual View: Forecasts OR Radar Map) */}
+        {/* Right Column (Desktop Triple View: Forecasts, Radar Map, OR AI Predictor) */}
         {weather && !error && (
-          <div className={`w-full lg:w-1/2 flex flex-col max-w-md mx-auto lg:max-w-none ${activeTab === 'forecast' ? 'block' : 'hidden lg:flex'}`}>
+          <div className={`w-full lg:w-1/2 flex flex-col max-w-md mx-auto lg:max-w-none ${activeTab === 'forecast' || activeTab === 'predict' ? 'block' : 'hidden lg:flex'}`}>
             <div className="lg:mt-[1.5rem] flex-1 overflow-y-auto scrollbar-hide pb-20 lg:pb-0 animate-in fade-in slide-in-from-right-8 duration-700 ease-out">
               {/* Desktop View Switcher */}
               <div className="hidden lg:flex items-center justify-between mb-4 px-4">
-                <div className="liquid-glass-dark p-1 rounded-2xl flex border border-white/15">
+                <div className="liquid-glass-dark p-1 rounded-2xl flex border border-white/15 gap-1">
                   <button
                     onClick={() => setDesktopRightView('forecast')}
-                    className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                       desktopRightView === 'forecast'
                         ? 'bg-[#FEC700] text-[#20462E] shadow-sm'
                         : 'text-white/70 hover:text-white'
                     }`}
                   >
                     <CalendarDays className="h-4 w-4" />
-                    <span>Forecasts (7d / 14d / 30d)</span>
+                    <span>Forecasts (7d/14d/30d)</span>
                   </button>
 
                   <button
                     onClick={() => setDesktopRightView('radar')}
-                    className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                       desktopRightView === 'radar'
                         ? 'bg-[#FEC700] text-[#20462E] shadow-sm'
                         : 'text-white/70 hover:text-white'
                     }`}
                   >
                     <Radio className="h-4 w-4 animate-pulse" />
-                    <span>Live Doppler Radar</span>
+                    <span>Doppler Radar</span>
+                  </button>
+
+                  <button
+                    onClick={() => setDesktopRightView('predict')}
+                    className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      desktopRightView === 'predict'
+                        ? 'bg-[#FEC700] text-[#20462E] shadow-sm'
+                        : 'text-white/70 hover:text-white'
+                    }`}
+                  >
+                    <Sparkles className="h-4 w-4 text-[#FEC700]" />
+                    <span>AI Predictor</span>
                   </button>
                 </div>
               </div>
@@ -168,7 +205,7 @@ export const WeatherDashboard: React.FC = () => {
                   monthlyForecasts={weather.monthlyForecast} 
                   onOpenMap={handleOpenRadar}
                 />
-              ) : (
+              ) : desktopRightView === 'radar' ? (
                 <div className="px-4">
                   <ErrorBoundary fallbackTitle="Doppler Radar Unavailable">
                     <RadarMap
@@ -179,8 +216,36 @@ export const WeatherDashboard: React.FC = () => {
                     />
                   </ErrorBoundary>
                 </div>
+              ) : (
+                <div className="px-4">
+                  <ErrorBoundary fallbackTitle="Future Weather Predictor Unavailable">
+                    <FutureWeatherPredictor weather={weather} />
+                  </ErrorBoundary>
+                </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* Mobile AI Weather Predictor Tab View */}
+        {activeTab === 'predict' && weather && (
+          <div className="w-full max-w-md mx-auto px-4 py-6 pb-24 lg:hidden animate-in fade-in duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <button
+                onClick={() => setActiveTab('home')}
+                className="flex items-center space-x-1 text-xs text-white/80 hover:text-white bg-white/10 px-3 py-1.5 rounded-xl border border-white/15 cursor-pointer"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                <span>Back to Dashboard</span>
+              </button>
+              <span className="text-xs font-semibold text-[#FEC700] bg-[#FEC700]/10 px-3 py-1 rounded-full border border-[#FEC700]/30 flex items-center space-x-1">
+                <Sparkles className="h-3 w-3" />
+                <span>AI Predictor</span>
+              </span>
+            </div>
+            <ErrorBoundary fallbackTitle="Future Weather Predictor Unavailable">
+              <FutureWeatherPredictor weather={weather} />
+            </ErrorBoundary>
           </div>
         )}
 
