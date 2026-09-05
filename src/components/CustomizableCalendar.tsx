@@ -260,65 +260,80 @@ export const CustomizableCalendar: React.FC<CustomizableCalendarProps> = ({
           </div>
         </div>
 
-        {/* Core Temperature & Weather Pod */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 my-5">
-          {/* Main Hour Temperature */}
-          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
-            <div>
-              <span className="text-xs text-white/60 font-semibold block">Temperature at {selectedHour}:00</span>
-              <span className="text-4xl font-black text-white tracking-tight">
-                {timeWeather.hourTemp}°C
+        {/* Core Temperature & Weather Pods */}
+        <div className="flex flex-col gap-3.5 my-5">
+          {/* Main Temperature Hero Card */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <span className="text-xs text-white/60 font-semibold block mb-0.5">
+                Temperature at {format(new Date().setHours(selectedHour, 0), 'hh:00 a')} ({selectedHour.toString().padStart(2, '0')}:00)
               </span>
-              <span className="text-xs text-white/50 block mt-1">
-                Feels like {timeWeather.feelsLike}°C
-              </span>
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mt-1">
+                <span className="text-4xl sm:text-5xl font-black text-white tracking-tight whitespace-nowrap">
+                  {timeWeather.hourTemp}°C
+                </span>
+                <span className="text-xs sm:text-sm text-white/60 font-medium whitespace-nowrap">
+                  Feels like {timeWeather.feelsLike}°C
+                </span>
+              </div>
             </div>
-            <div className="w-14 h-14 flex items-center justify-center">
+
+            {/* Weather Icon with guaranteed spacing and zero overlap */}
+            <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 flex items-center justify-center bg-white/10 rounded-2xl border border-white/15 p-2 shadow-inner">
               <WeatherIcon 
                 code={timeWeather.conditionCode} 
                 isDay={timeWeather.isDayTime ? 1 : 0} 
-                className="w-12 h-12" 
+                className="w-full h-full object-contain" 
               />
             </div>
           </div>
 
-          {/* Daily Max / Min Range */}
-          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col justify-between">
-            <span className="text-xs text-white/60 font-semibold block">Full Day Temperature Arc</span>
-            <div className="flex items-baseline space-x-2 my-1">
-              <span className="text-2xl font-bold text-white">{selectedDayData.maxTemp}°C</span>
-              <span className="text-xs text-white/50">High</span>
-              <span className="text-lg font-semibold text-white/70 ml-2">{selectedDayData.minTemp}°C</span>
-              <span className="text-xs text-white/50">Low</span>
+          {/* Sub-Metrics Grid (2 columns: Full Day Arc & Telemetry) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            {/* Daily Max / Min Range Card */}
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col justify-between space-y-2.5">
+              <span className="text-xs text-white/60 font-semibold block">Full Day Temperature Arc</span>
+              <div className="flex items-center justify-between text-sm py-1">
+                <div className="flex items-center space-x-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#FEC700]"></span>
+                  <span className="text-white/60 text-xs">High:</span>
+                  <span className="text-white font-bold text-base">{selectedDayData.maxTemp}°C</span>
+                </div>
+                <div className="flex items-center space-x-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-blue-400"></span>
+                  <span className="text-white/60 text-xs">Low:</span>
+                  <span className="text-white/80 font-bold text-base">{selectedDayData.minTemp}°C</span>
+                </div>
+              </div>
+              <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden flex">
+                <div className="h-full bg-blue-400 w-1/3 rounded-l-full"></div>
+                <div className="h-full bg-[#FEC700] w-2/3 rounded-r-full"></div>
+              </div>
             </div>
-            <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden flex">
-              <div className="h-full bg-blue-400 w-1/3"></div>
-              <div className="h-full bg-[#FEC700] w-2/3"></div>
-            </div>
-          </div>
 
-          {/* Precipitation & Wind Vector */}
-          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col justify-between space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="flex items-center space-x-1.5 text-white/70">
-                <Droplets className="h-3.5 w-3.5 text-blue-400" />
-                <span>Precipitation Odds</span>
-              </span>
-              <span className="font-bold text-white">{selectedDayData.precipProb}%</span>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="flex items-center space-x-1.5 text-white/70">
-                <Wind className="h-3.5 w-3.5 text-emerald-400" />
-                <span>Wind Velocity</span>
-              </span>
-              <span className="font-bold text-white">{timeWeather.hourWind} km/h</span>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="flex items-center space-x-1.5 text-white/70">
-                <Thermometer className="h-3.5 w-3.5 text-[#FEC700]" />
-                <span>Relative Humidity</span>
-              </span>
-              <span className="font-bold text-white">{timeWeather.humidity}%</span>
+            {/* Precipitation & Wind Vector */}
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col justify-between space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="flex items-center space-x-1.5 text-white/70">
+                  <Droplets className="h-3.5 w-3.5 text-blue-400 shrink-0" />
+                  <span>Precipitation Odds</span>
+                </span>
+                <span className="font-bold text-white font-mono">{selectedDayData.precipProb}%</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="flex items-center space-x-1.5 text-white/70">
+                  <Wind className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                  <span>Wind Velocity</span>
+                </span>
+                <span className="font-bold text-white font-mono">{timeWeather.hourWind} km/h</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="flex items-center space-x-1.5 text-white/70">
+                  <Thermometer className="h-3.5 w-3.5 text-[#FEC700] shrink-0" />
+                  <span>Relative Humidity</span>
+                </span>
+                <span className="font-bold text-white font-mono">{timeWeather.humidity}%</span>
+              </div>
             </div>
           </div>
         </div>
@@ -379,9 +394,9 @@ export const CustomizableCalendar: React.FC<CustomizableCalendarProps> = ({
         {/* 24-Hour Mini Timeline Strip for Selected Day */}
         <div className="mt-5 pt-4 border-t border-white/10">
           <span className="text-xs font-bold text-white/70 block mb-2.5">
-            Hourly Progress for {format(selectedDate, 'MMM d')}:
+            Hourly Progression for {format(selectedDate, 'MMM d')}:
           </span>
-          <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
             {dayTimelineHours.map((h) => {
               const isSelected = selectedHour === h;
               const isDayTime = h >= 6 && h < 19;
@@ -394,20 +409,20 @@ export const CustomizableCalendar: React.FC<CustomizableCalendarProps> = ({
                 <button
                   key={h}
                   onClick={() => setSelectedHour(h)}
-                  className={`p-2.5 rounded-2xl flex flex-col items-center justify-between transition-all cursor-pointer border ${
+                  className={`min-w-[56px] flex-1 p-2 rounded-2xl flex flex-col items-center justify-between transition-all cursor-pointer border ${
                     isSelected 
-                      ? 'bg-[#FEC700] text-[#20462E] border-[#FEC700] shadow-md scale-105 font-bold'
+                      ? 'bg-[#FEC700] text-[#20462E] border-[#FEC700] shadow-md font-bold scale-[1.03]'
                       : 'bg-white/5 hover:bg-white/10 text-white/80 border-white/5'
                   }`}
                 >
                   <span className="text-[10px] font-mono">
                     {h.toString().padStart(2, '0')}:00
                   </span>
-                  <div className="my-1">
+                  <div className="my-1.5 w-6 h-6 flex items-center justify-center">
                     <WeatherIcon 
                       code={selectedDayData.conditionCode} 
                       isDay={isDayTime ? 1 : 0} 
-                      className="w-5 h-5" 
+                      className="w-full h-full object-contain" 
                     />
                   </div>
                   <span className="text-xs font-bold">
