@@ -1,10 +1,10 @@
 # AnomaSense - Atmospheric Weather Intelligence
 
-[![Live Demo - GitHub Pages](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-2ea44f?style=for-the-badge&logo=github)](https://gokulavi.github.io/weather-prediction/)
+[![Live Demo - GitHub Pages](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-2ea44f?style=for-the-badge&logo=github)](https://bhavadharani634-bb.github.io/WEATHER-APP/)
 [![Live Demo - Vercel](https://img.shields.io/badge/Live%20Demo-Vercel-black?style=for-the-badge&logo=vercel)](https://weather-app-teal-gamma-38.vercel.app/)
 
 > **🌐 Live Application Deployments:**
-> - **GitHub Pages:** [https://gokulavi.github.io/weather-prediction/](https://gokulavi.github.io/weather-prediction/)
+> - **GitHub Pages:** [https://bhavadharani634-bb.github.io/WEATHER-APP/](https://bhavadharani634-bb.github.io/WEATHER-APP/)
 > - **Vercel Production:** [https://weather-app-teal-gamma-38.vercel.app/](https://weather-app-teal-gamma-38.vercel.app/)
 
 A state-of-the-art, liquid-forest glassmorphism weather application built with React, TypeScript, and Tailwind CSS. Features 30-day extended ensemble forecasts, live Doppler radar map with scrubbing, and predictive debounced search.
@@ -15,8 +15,8 @@ Follow these steps to run the project locally:
 
 1. **Clone the repository** (if you haven't already):
    ```bash
-   git clone https://github.com/gokulavi/weather-prediction.git
-   cd weather-prediction
+   git clone https://github.com/bhavadharani634-BB/WEATHER-APP.git
+   cd WEATHER-APP
    ```
 
 2. **Install dependencies**:
