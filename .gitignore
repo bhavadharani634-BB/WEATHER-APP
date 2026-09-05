@@ -26,4 +26,5 @@ dist-ssr
 *.sw?
 push_to_github.bat
 push_to_gokulavi.bat
+push_to_both.bat
 
