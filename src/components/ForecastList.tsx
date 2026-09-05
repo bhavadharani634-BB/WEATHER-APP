@@ -1,25 +1,30 @@
 import React, { useState } from 'react';
-import type { DailyForecast, MonthlyForecastDay } from '../types/weather';
+import type { DailyForecast, MonthlyForecastDay, HourlyForecast } from '../types/weather';
 import { ForecastCard } from './ForecastCard';
 import { MonthlyForecast } from './MonthlyForecast';
-import { CalendarDays, Radio } from 'lucide-react';
+import { CustomizableCalendar } from './CustomizableCalendar';
+import { CalendarDays, Radio, Calendar } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 interface ForecastListProps {
   forecasts: DailyForecast[];
   monthlyForecasts?: MonthlyForecastDay[];
+  hourly?: HourlyForecast[];
+  locationName?: string;
   onOpenMap?: () => void;
 }
 
-type ForecastRange = '7d' | '14d' | 'monthly';
+type ForecastRange = 'calendar' | '7d' | '14d' | 'monthly';
 
 export const ForecastList: React.FC<ForecastListProps> = ({ 
   forecasts, 
   monthlyForecasts = [],
+  hourly = [],
+  locationName,
   onOpenMap 
 }) => {
-  const [range, setRange] = useState<ForecastRange>('7d');
+  const [range, setRange] = useState<ForecastRange>('calendar');
   const [expandedIndex, setExpandedIndex] = useState<number>(0);
 
   if (!forecasts || forecasts.length === 0) return null;
@@ -34,7 +39,13 @@ export const ForecastList: React.FC<ForecastListProps> = ({
           <div className="flex items-center space-x-2">
             <CalendarDays className="h-5 w-5 text-[#FEC700]" />
             <h3 className="text-white/90 font-bold text-lg tracking-wide">
-              {range === 'monthly' ? 'Monthly Forecast' : range === '14d' ? '14-Day Extended' : '7-Day Forecast'}
+              {range === 'calendar' 
+                ? 'Customizable Calendar' 
+                : range === 'monthly' 
+                ? 'Monthly Forecast' 
+                : range === '14d' 
+                ? '14-Day Extended' 
+                : '7-Day Forecast'}
             </h3>
           </div>
 
@@ -50,7 +61,7 @@ export const ForecastList: React.FC<ForecastListProps> = ({
         </div>
 
         {/* Tab Controls & Desktop Radar Button */}
-        <div className="flex items-center space-x-2 self-start sm:self-auto">
+        <div className="flex items-center space-x-2 self-start sm:self-auto flex-wrap gap-y-2">
           {onOpenMap && (
             <button
               onClick={onOpenMap}
@@ -62,55 +73,79 @@ export const ForecastList: React.FC<ForecastListProps> = ({
             </button>
           )}
 
-          <div className="liquid-glass-dark p-1 rounded-2xl flex border border-white/10">
-          <button
-            onClick={() => setRange('7d')}
-            className={twMerge(
-              clsx(
-                "px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-300",
-                range === '7d'
-                  ? "bg-[#FEC700] text-[#20462E] shadow-sm font-bold scale-102"
-                  : "text-white/70 hover:text-white"
-              )
-            )}
-          >
-            7 Days
-          </button>
-          <button
-            onClick={() => setRange('14d')}
-            className={twMerge(
-              clsx(
-                "px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-300",
-                range === '14d'
-                  ? "bg-[#FEC700] text-[#20462E] shadow-sm font-bold scale-102"
-                  : "text-white/70 hover:text-white"
-              )
-            )}
-          >
-            14 Days
-          </button>
-          <button
-            onClick={() => setRange('monthly')}
-            className={twMerge(
-              clsx(
-                "px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-300 relative",
-                range === 'monthly'
-                  ? "bg-[#FEC700] text-[#20462E] shadow-sm font-bold scale-102"
-                  : "text-white/70 hover:text-white"
-              )
-            )}
-          >
-            Monthly
-            <span className="ml-1 px-1.5 py-0.2 rounded-full text-[9px] bg-white/20 text-current">
-              30d
-            </span>
-          </button>
+          <div className="liquid-glass-dark p-1 rounded-2xl flex border border-white/10 gap-0.5">
+            <button
+              onClick={() => setRange('calendar')}
+              className={twMerge(
+                clsx(
+                  "flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-300",
+                  range === 'calendar'
+                    ? "bg-[#FEC700] text-[#20462E] shadow-sm font-bold scale-102"
+                    : "text-white/70 hover:text-white"
+                )
+              )}
+            >
+              <Calendar className="h-3 w-3" />
+              <span>Calendar</span>
+            </button>
+
+            <button
+              onClick={() => setRange('7d')}
+              className={twMerge(
+                clsx(
+                  "px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-300",
+                  range === '7d'
+                    ? "bg-[#FEC700] text-[#20462E] shadow-sm font-bold scale-102"
+                    : "text-white/70 hover:text-white"
+                )
+              )}
+            >
+              7 Days
+            </button>
+            
+            <button
+              onClick={() => setRange('14d')}
+              className={twMerge(
+                clsx(
+                  "px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-300",
+                  range === '14d'
+                    ? "bg-[#FEC700] text-[#20462E] shadow-sm font-bold scale-102"
+                    : "text-white/70 hover:text-white"
+                )
+              )}
+            >
+              14 Days
+            </button>
+
+            <button
+              onClick={() => setRange('monthly')}
+              className={twMerge(
+                clsx(
+                  "px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-300 relative",
+                  range === 'monthly'
+                    ? "bg-[#FEC700] text-[#20462E] shadow-sm font-bold scale-102"
+                    : "text-white/70 hover:text-white"
+                )
+              )}
+            >
+              Monthly
+              <span className="ml-1 px-1 py-0.2 rounded-full text-[9px] bg-white/20 text-current">
+                30d
+              </span>
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
       {/* Content Rendering */}
-      {range === 'monthly' ? (
+      {range === 'calendar' ? (
+        <CustomizableCalendar 
+          forecasts={forecasts} 
+          monthlyForecasts={monthlyForecasts}
+          hourly={hourly}
+          locationName={locationName}
+        />
+      ) : range === 'monthly' ? (
         <MonthlyForecast forecasts={monthlyForecasts} />
       ) : (
         <div className="flex flex-col space-y-2.5">

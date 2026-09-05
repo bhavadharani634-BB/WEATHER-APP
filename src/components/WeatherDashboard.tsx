@@ -203,6 +203,8 @@ export const WeatherDashboard: React.FC = () => {
                 <ForecastList 
                   forecasts={weather.forecast} 
                   monthlyForecasts={weather.monthlyForecast} 
+                  hourly={weather.hourly}
+                  locationName={weather.location.name}
                   onOpenMap={handleOpenRadar}
                 />
               ) : desktopRightView === 'radar' ? (
